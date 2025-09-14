@@ -1,10 +1,12 @@
 from datetime import datetime
 from ethiopian_date import EthiopianDateConverter
+import re
 
 converter = EthiopianDateConverter()
 
 def validate_phone_number(string_val=None):
-    string_val = str(string_val.strip(" ").replace(" ", ""))
+    if not isinstance(string_val, str) or string_val is None:
+        return ""
 
     if string_val.startswith("+251"):
         return string_val
@@ -18,7 +20,6 @@ def validate_phone_number(string_val=None):
         return ""
 
 def validate_birthdate(birthdate=None):
-    # 03-03-1996
     
     if birthdate:
         if "-" in birthdate:
@@ -46,7 +47,7 @@ def validate_profession(profession=None):
         "other": 4
     }
     
-    if not profession:
+    if not isinstance(profession, str) or profession is None:
         return profession_dict["other"]
     
     profession = " ".join(profession.split()).lower()
@@ -59,27 +60,23 @@ def validate_profession(profession=None):
 
 def validate_relation(relation=None):
     relation_dict = {
-        "self": "Head",
-        "sibling" : 1,
+        "self": "head",
+        "brother": 1,
+        "sister": 1,
         "parent": 2,
         "relative": 3,
-        "child" : 4,
-        "grand_parents" : 5,
-        "employee" : 6,
-        "other" : 7,
+        "child": 4,
+        "grand parents": 5,
+        "employee": 6,
+        "other": 7,
         "spouse": 8
     }
-    if not relation:
+    if not isinstance(relation, str):
         return relation_dict["other"]
-    
     relation = " ".join(relation.split()).lower()
     
-    for key in relation_dict:
-        if key in relation_dict:
-            return relation_dict[key]
     
-    return relation_dict["other"]
-
+    return relation_dict.get(relation, relation_dict["other"])
 
 def validate_gender(gender=None):
     gender_dict = {
@@ -98,3 +95,12 @@ def validate_gender(gender=None):
         return gender_dict["Female"]
     else:
         return gender_dict["Male"]
+
+def validate_family(new_id, families={}):  
+    parts = new_id.split("/")
+    for part in parts:
+        if re.match(r"^[A-Za-z]+\d+$", part): 
+            family_id = part
+            families.setdefault(family_id, []).append(new_id)
+            break 
+    return families
