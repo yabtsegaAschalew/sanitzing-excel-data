@@ -1,7 +1,10 @@
 import httpx
 import asyncio
+from main import read_excel
 
-API_URL = "http://127.0.0.1:8000/api/graphql"
+API_URL = "https://cbhi.habtechsolution.com/api/graphql"
+
+read_excel('excel_file/Lideta SC 2nd round export_active_members_07-05-17.xlsx')
 
 async def authenticate(username: str, password: str):
     mutation = f"""
@@ -26,16 +29,19 @@ async def authenticate(username: str, password: str):
     token = data["token"]
     refresh_expires_in = data["refreshExpiresIn"]
 
+    openimis_session, JWT_token, X_CSRFToken = token.split(".")
+    print(openimis_session, JWT_token, X_CSRFToken)
+    
     
     headers = {
-        "Authorization": f"JWT {token}",
+        "Authorization": f"openimis_session={openimis_session}; JWT={token};",
         "Content-Type": "application/json"
     }
 
     
     cookies = {
-        "openimis_session": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9",
-        "X_CSRFToken": "ssM9oXqlBXOeP3Cgto_llM9ZYghZG6SJhBkxJAQf63E"
+        "openimis_session": f"{openimis_session}",
+        "X-CSRFToken": f"{X_CSRFToken}"
     }
 
     return headers, cookies
@@ -52,8 +58,43 @@ async def send_mutation(headers, mutation: str, variables: dict = None, cookies:
     return response.json()
 
 
+
+
 async def main():
     headers, cookies = await authenticate("Admin", "admin123")
+
+    create_family = """ 
+        mutation {
+            createFamily(
+                input: {
+                clientMutationId: "d4a802ed-ea10-4ae4-a8eb-148d21411a09"
+                clientMutationLabel: "Create family - idk idk (ui34298348)"
+                headInsuree: {
+                    chfId: "ui34298348"
+                    lastName: "idk"
+                    otherNames: "idk"
+                    genderId: "M"
+                    dob: "1995-08-13"
+                    head: true
+                    marital: "N"
+                    cardIssued: false
+                    status: "AC"
+                }
+                locationId: 35
+                poverty: false
+                familyTypeId: "G"
+                address: "somwhere"
+                confirmationTypeId: "A"
+                confirmationNo: "787967"
+                jsonExt: "{}"
+                }
+            ) {
+                clientMutationId
+                internalId
+            }
+            }
+
+    """
 
     create_mutation = """
         mutation {
